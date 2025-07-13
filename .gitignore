@@ -1,0 +1,16 @@
+/db.sqlite3
+/env
+/env3.9
+/env3.11
+__pycache__/
+*.py[cod]
+**/__pycache__/
+*.scratch
+*.env
+*.swp
+*.swo
+*.orig
+*.sqlite3.*
+*.env.production
+django_logs
+media/
