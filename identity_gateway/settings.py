@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'gateway'
 ]
 
 MIDDLEWARE = [
@@ -120,3 +121,16 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+ACTIVE_IDP = "keycloak"
+
+IDP_TOKEN_URL = "https/localhost:8080/realms/ecommerce_realm/protocol/openid-connect/token"
+IDP_CLIENT_ID = os.getenv("KC_CLIENT_ID")
+IDP_SECRET = os.getenv("KC_SECRET")
+IDP_REDIRECT_URI = "http://xyz.com"
+
+IDP_CERTS = "http://localhost:8080/realms/ecommerce_realm/protocol/openid-connect/certs"
+IDP_ISS = "https://localhost:8080/realms/myrealm"
+IDP_AUD = "keycloack-client-iad" #same w client id?
+
+
