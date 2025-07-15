@@ -10,10 +10,10 @@ identity_gateway : A lightweight **Identity Gateway** that centrally handles log
 
 ### Example flow
 1. Frontend (https://ui.app2.com/login) redirect Keycloack/Auth0 to login (https://idp.app0.com)
-2. Once Login, Redirects to identity_gateway/gateway/login_callback (https://idpgateway.app1.com)
+2. Once Login, Redirects to identity_gateway/gateway/callback (https://idpgateway.app1.com)
 3. identity_gateway
    * Exchanges code for tokens
-   * Verifieds token
+   * Verifies token
    * Extracts normalized claims
    * Emits event w standard identity claims
    * Set refresh token cookie
@@ -26,7 +26,7 @@ identity_gateway : A lightweight **Identity Gateway** that centrally handles log
 ```
 5. Identity gateway replies with { access_token: "...", sub: "...", token_type: ".."}
 6. Frontend stores access token in mem or localStorage?
-5. Any context (e.g https://order.app3.com) calls /me to get standard identity claims like
+7. Any context (e.g https://order.app3.com) on demand calls /me to get standard identity claims like
    ```json
    
    {

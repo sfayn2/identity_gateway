@@ -27,7 +27,6 @@ class KeycloakIdPAdapter(IdPAdapter):
         return {
             "event_type":  "identity_gateway_service.events.UserLoggedInEvent",
             "sub": claims.get("sub"),
-            "token_type": claims.get("token_type"),
             "tenant_id": claims.get("tenant_id"),
             "roles": claims.get("realm_access", {}).get("roles", [])
         }
