@@ -25,7 +25,12 @@ SECRET_KEY = 'django-insecure-o2lmp^!zi!36)(iv$^+pe*ms4r)=n)ctxd5_0y4%2%iin!ut8$
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost']
+CSRF_TRUSTED_ORIGINS = [
+    'https://idp.app0.com'
+    'https://ui.app2.com',
+    'https://order.app3.com'
+]
 
 
 # Application definition
@@ -37,12 +42,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corheaders',
     'gateway'
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -133,4 +140,14 @@ IDP_CERTS = "http://localhost:8080/realms/ecommerce_realm/protocol/openid-connec
 IDP_ISS = "https://localhost:8080/realms/myrealm"
 IDP_AUD = "keycloack-client-iad" #same w client id?
 
+COOKIES_DOMAIN = "idpgateway.app1.com"
 
+#CORS
+CORS_ALLOWED_ORIGINS = [
+    "https://ui.app2.com",
+    "http://localhost:8080",
+]
+
+CORS_ALLOW_METHODS = [
+    'POST',
+]

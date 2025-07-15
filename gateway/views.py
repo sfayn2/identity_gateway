@@ -6,7 +6,6 @@ from .adapters.resolver import  resolve_idp_adapter
 from .services.event_publisher import publish_user_logged_in_event
 
 # Create your views here.
-@csrf_exempt
 def login_callback(request):
     code = request.POST.get("code")
     next_path = request.GET.get("next", "/")
@@ -33,37 +32,34 @@ def login_callback(request):
     #id_token = token_data.get("id_token")
     access_token = token_data.get("access_token")
     refresh_token = token_data.get("refresh_token")
-    token_type = token_data.get("token_type")
+    token_type = token_data.get("token_type", "Bearer")
 
     if not access_token:
         return JsonResponse({"error": "Missing Access Token"}, status=401)
 
-    adapter = resolved_idp_adapter(refresh_token)
-    claims = adapter.decode_token(refresh_token)
+    adapter = resolve_idp_adapter(access_token)
+    claims = adapter.decode_token(access_token)
     normalized = adapter.normalized_claims(claims, token_type=token_type)
 
     publish_user_logged_in_event(normalized)
 
     response = HttpResponseRedirect(next_path)
     response.set_cookie(
-            key="access_token", value=result.access_token, httponly=True, 
-            samesite="Lax", domain=".mystore.com", path="/", secure=True
-        )
-    response.set_cookie(
         key="refresh_token", value=result.refresh_token, httponly=True, 
-        samesite="Strict", domain=".mystore.com", path="/gateway/refresh_token", secure=True
+        samesite=None, domain=settings.COOKIES_DOMAIN, path="/gateway/refresh_token", secure=True
     )
 
     return response
 
 def me(request):
-    token = request.headers.get("Authorization", "").replace("Bearer ", "")
-    if not token:
-        return JsonResponse({"error": "Missing token"}, status=400)
+    access_token = request.headers.get("Authorization", "").replace("Bearer ", "")
+    token_type = request.GET.get("token_type", "Bearer")
+    if not access_token:
+        return JsonResponse({"error": "Missing token"}, status=401)
 
-    adapter = resolved_idp_adapter(token)
-    claims = adapater.decode_token(token)
-    normalized = adapter.normalized_claims(claims, token_type="Bearer")
+    adapter = resolve_idp_adapter(access_token)
+    claims = adapater.decode_token(access_token)
+    normalized = adapter.normalized_claims(claims, token_type=token_type)
 
     return JsonResponse(normalized)
 
@@ -87,16 +83,30 @@ def refresh_token(request):
         return JsonResponse({"error": "Token refresh failed"}, status=401)
 
     token_data = response.json()
+    token_type = token_data.get("token_type", "Bearer")
     new_access_token = token_data.get("access_token")
+    new_refresh_token = token_data.get("refresh_token")
 
-    if not new_access_token:
-        return JsonResponse({"error": "No access token in response"}, status=401)
+    if not new_access_token or not new_refresh_token:
+        return JsonResponse({"error": "No access/refresh token in response"}, status=401)
 
-    response = JsonResponse({"success": True })
+    adapter = resolve_idp_adapter(token)
+    claims = adapater.decode_token(token)
+    normalized = adapter.normalized_claims(claims, token_type=token_type)
+
+    response = JsonResponse({
+        "success": True, 
+        "access_token": new_access_token,
+        "token_type": token_type
+        "sub": normalized.get("sub")
+    })
+
+    # Decision: frontend to request via refresh_token & let frontend have the access token in mem or localStorage via post-login?
+
     response.set_cookie(
-            key="access_token", value=new_access_token, httponly=True, 
-            samesite="Lax", domain=".mystore.com", path="/", secure=True
-        )
+        key="refresh_token", value=result.refresh_token, httponly=True, 
+        samesite=None, domain=settings.COOKIES_DOMAIN, path="/gateway/refresh", secure=True
+    )
 
     return response
 
