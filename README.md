@@ -21,8 +21,15 @@ identity_gateway : A lightweight **Identity Gateway** that centrally handles log
 4. Frontend (https://ui.app2.com/ready) immediately fetches access token via
 ```js
    await fetch("https://idpgateway/app1/refresh", {
+      method: "POST",
       credentials: "include"
    })
+   if (response.ok) {
+      const { access_token } = await response.json();
+      storeInMemory(access_token)
+   } else {
+      ...
+   }
 ```
 5. Identity gateway replies with { access_token: "...", sub: "...", token_type: ".."}
 6. Frontend stores access token in mem or localStorage?
