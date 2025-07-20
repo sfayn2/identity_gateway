@@ -14,7 +14,7 @@ def login_callback(request):
 
     try:
         tenant = TenantConfig.objects.get(tenant_id=tenant_id, enabled=True)
-    except TenantConfig.DoesNotExists:
+    except TenantConfig.DoesNotExist:
         return JsonResponse({"error": "Unknown tenant"}, status=400)
 
     code = request.POST.get("code")
@@ -26,13 +26,12 @@ def login_callback(request):
     token_data = adapter.exchange_code_for_token(code=code)
     access_token = token_data.get("access_token")
     refresh_token = token_data.get("refresh_token")
-    token_type = token_data.get("token_type", "Bearer")
 
     if not access_token:
         return JsonResponse({"error": "Missing Access Token"}, status=401)
 
     claims = adapter.decode_token(access_token)
-    normalized = adapter.normalized_claims(claims, token_type=token_type)
+    normalized = adapter.normalized_claims(claims)
 
     publish_user_logged_in_event(normalized)
 
@@ -52,7 +51,7 @@ def me(request):
 
     try:
         tenant = TenantConfig.objects.get(tenant_id=tenant_id, enabled=True)
-    except TenantConfig.DoesNotExists:
+    except TenantConfig.DoesNotExist:
         return JsonResponse({"error": "Unknown tenant"}, status=400)
 
     adapter = resolve_idp_adapter(tenant)
@@ -66,13 +65,13 @@ def refresh_token(request):
     if not tenant_id:
         return JsonResponse({"error": "Missing tenant id."}, status=400)
 
-    refresh_token = request.COOKIES.get("refresh_token")
+    refresh_token = request.COOKIES.get(f"refresh_token_{tenant_id}")
     if not refresh_token:
         return JsonResponse({"error": "Missing Refresh Token"}, status=400)
 
     try:
         tenant = TenantConfig.objects.get(tenant_id=tenant_id, enabled=True)
-    except TenantConfig.DoesNotExists:
+    except TenantConfig.DoesNotExist:
         return JsonResponse({"error": "Unknown tenant"}, status=400)
 
     adapter =  revolve_idp_adapter(tenant)
@@ -84,6 +83,7 @@ def refresh_token(request):
     if not new_access_token or not new_refresh_token:
         return JsonResponse({"error": "No access/refresh token in response"}, status=40)
 
+    claims = adapter.decode_token(new_access_token)
     normalized = adapter.normalized_claims(claims)
 
     response = JsonResponse({
