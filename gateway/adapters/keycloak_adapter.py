@@ -1,32 +1,58 @@
 import jwt
+import requests
 from jwt import PyJWKClient
 from django.conf import settings
-from .base import IdPAdapter
+from .base import BaseOIDCAdapter
+from .dtos import NormalizedClaims
+
+def fetch_oidc_metadata(metadata_url: str) -> dict:
+    response = requests.get(metadata_url)
+    response.raise_for_status()
+
+    return response.json()
 
 
-class KeycloakIdPAdapter(IdPAdapter):
-    def __init__(self, issuer: str, audience: str = None):
-        self.issuer = issuer
-        self.audience = audience
-
-        self.jwks_url = settings.IDP_CERTS
-        self.jwks_client = PyJWKClient(self.jwks_url)
-
-    def decode_token(self, token: str) -> str:
-        signing_key = self.jwks_client.get_signing_key_from_jwt(token)
-        decoded = jwt.decode(
-            token,
-            signing_key.key,
-            algorithms=["RS256"],
-            issuer=self.issuer,
-            audience=self.audience
+class KeycloakIdPAdapter(BaseOIDCAdapter):
+    
+    def normalize_claims(self, claims: dict) -> dict:
+        return NormalizedClaims(
+            event_type="identity_gateway_service.events.UserLoggedInEvent",
+            sub=claims.get("sub"),
+            tenant_id=claims.get("tenant_id"),
+            roles=claims.get("realm_access", {}).get("roles", [])
         )
-        return decoded
 
-    def normalize_claims(self, claims: dict, token_type: str) -> dict:
-        return {
-            "event_type":  "identity_gateway_service.events.UserLoggedInEvent",
-            "sub": claims.get("sub"),
-            "tenant_id": claims.get("tenant_id"),
-            "roles": claims.get("realm_access", {}).get("roles", [])
-        }
+    def exchange_code_for_token(self, code: str) -> dict:
+        metadata = fetch_oidc_metadata(self.tenant.idp_metadata_url)
+        token_endpoint = metadata["token_endpoint"]
+        response = request.post(
+            token_endpoint,
+            data={
+                "grant_type": "authorization_code",
+                "code": code,
+                "redirect_uri": self.tenant.redirect_uri,
+                "client_id": self.tenant.client_id,
+                "client_secret": self.tenant.client_secret
+            },
+            headers={"Content-Type": "application/x-www-form-urlencoded"}
+        )
+        response.raise_for_status()
+        return response.json()
+
+    def refresh_token(self, token: str) -> dict:
+        metadata = fetch_oidc_metadata(self.tenant.idp_metadata_url)
+        token_endpoint = metadata["token_endpoint"]
+        response = request.post(
+            token_endpoint,
+            data={
+                "grant_type": "refresh_token",
+                "refresh_token": refresh_token,
+                "client_id": self.tenant.client_id,
+                "client_secret": self.tenant.client_secret
+            },
+            headers={"Content-Type": "application/x-www-form-urlencoded"}
+        )
+        response.raise_for_status()
+        return response.json()
+
+

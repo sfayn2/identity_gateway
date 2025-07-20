@@ -1,13 +1,10 @@
 import jwt
-from .base import IdPAdapter
+from .base import BaseOIDCAdapter
 
-class Auth0IdPAdapter(IdPAdapter):
-    def __init__(self, issuer: str, audience: str = None):
-        self.issuer = issuer
-        self.audience = audience
+class Auth0IdPAdapter(BaseOIDCAdapter):
 
     def decode_token(self, token: str) -> str:
-        return jwt.decode(token, options={"verify_signature": False, algorithms=["RS256"]})
+        return jwt.decode(token, options={"verify_signature": False, algorithms:["RS256"]})
 
     def normalize_claims(self, claims: dict, token_type: str) -> dict:
         return {

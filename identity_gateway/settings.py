@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'corheaders',
+    'corsheaders',
     'gateway'
 ]
 
@@ -129,18 +129,19 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-ACTIVE_IDP = "keycloak"
-
-IDP_TOKEN_URL = "https/localhost:8080/realms/ecommerce_realm/protocol/openid-connect/token"
-IDP_CLIENT_ID = os.getenv("KC_CLIENT_ID")
-IDP_SECRET = os.getenv("KC_SECRET")
-IDP_REDIRECT_URI = "http://xyz.com"
-
-IDP_CERTS = "http://localhost:8080/realms/ecommerce_realm/protocol/openid-connect/certs"
-IDP_ISS = "https://localhost:8080/realms/myrealm"
-IDP_AUD = "keycloack-client-iad" #same w client id?
+#ACTIVE_IDP = "keycloak"
+#
+#IDP_TOKEN_URL = "https/localhost:8080/realms/ecommerce_realm/protocol/openid-connect/token"
+#IDP_CLIENT_ID = os.getenv("KC_CLIENT_ID")
+#IDP_SECRET = os.getenv("KC_SECRET")
+#IDP_REDIRECT_URI = "http://xyz.com"
+#
+#IDP_CERTS = "http://localhost:8080/realms/ecommerce_realm/protocol/openid-connect/certs"
+#IDP_ISS = "https://localhost:8080/realms/myrealm"
+#IDP_AUD = "keycloack-client-iad" #same w client id?
 
 COOKIES_DOMAIN = "idpgateway.app1.com"
+COOKIES_PATH = "/gateway/refresh"
 
 #CORS
 CORS_ALLOWED_ORIGINS = [
@@ -151,3 +152,6 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_METHODS = [
     'POST',
 ]
+
+
+REDIS_URL = None
