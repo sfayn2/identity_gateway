@@ -21,7 +21,7 @@ def login_callback(request):
     if not code:
         return JsonResponse({"error": "Missing authorization code"}, status=400)
 
-    adapter =  revolve_idp_adapter(tenant)
+    adapter =  resolve_idp_adapter(tenant)
 
     token_data = adapter.exchange_code_for_token(code=code)
     access_token = token_data.get("access_token")
@@ -94,7 +94,7 @@ def refresh_token(request):
     # Decision: frontend to request via refresh_token & let frontend have the access token in mem or localStorage via post-login?
 
     response.set_cookie(
-        key=f"refresh_token_{tenant_id}", value=refresh_token, httponly=True, 
+        key=f"refresh_token_{tenant_id}", value=new_refresh_token, httponly=True, 
         samesite="None", domain=settings.COOKIES_DOMAIN, path=settings.COOKIES_PATH, secure=True
     )
 
