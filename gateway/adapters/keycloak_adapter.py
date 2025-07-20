@@ -46,7 +46,7 @@ class KeycloakIdPAdapter(BaseOIDCAdapter):
             token_endpoint,
             data={
                 "grant_type": "refresh_token",
-                "refresh_token": refresh_token,
+                "refresh_token": token,
                 "client_id": self.tenant.client_id,
                 "client_secret": self.tenant.client_secret
             },
