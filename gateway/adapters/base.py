@@ -1,14 +1,23 @@
+import requests
 from abc import ABC, abstractmethod
 from ..models import TenantConfig
+import jwt
+from jwt import PyJWKClient
+
+def fetch_oidc_metadata(metadata_url: str) -> dict:
+    response = requests.get(metadata_url)
+    response.raise_for_status()
+
+    return response.json()
 
 class BaseOIDCAdapter(ABC):
 
     def __init__(self, tenant):
         self.tenant = tenant
 
-    def decode_token(token: str) -> None:
+    def decode_token(self, token: str) -> None:
         metadata = fetch_oidc_metadata(self.tenant.idp_metadata_url)
-        jwks_uri = metdata["jwks_uri"]
+        jwks_uri = metadata["jwks_uri"]
         jwk_client = PyJWKClient(jwks_uri)
         signing_key = jwk_client.get_signing_key_from_jwt(token)
 

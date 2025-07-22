@@ -146,7 +146,7 @@ COOKIES_PATH = "/gateway/refresh"
 #CORS
 CORS_ALLOWED_ORIGINS = [
     "https://ui.app2.com",
-    "http://localhost:8080",
+    "http://localhost:8081",
 ]
 
 CORS_ALLOW_METHODS = [
