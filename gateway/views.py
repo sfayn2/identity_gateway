@@ -7,6 +7,7 @@ from .adapters.resolver import  resolve_idp_adapter
 from .models import TenantConfig
 #from .services.event_publisher import publish_user_logged_in_event
 
+
 # Create your views here.
 def login(request):
     tenant_id = request.GET.get("state")
@@ -133,7 +134,7 @@ def refresh_token(request):
     response = JsonResponse({
         "access_token": new_access_token,
         "sub": normalized.sub,
-        "username": normalized.username,
+        "name": normalized.name,
         "email": normalized.email
     })
 
