@@ -16,6 +16,8 @@ class KeycloakIdPAdapter(BaseOIDCAdapter):
         return NormalizedClaims(
             event_type="identity_gateway_service.events.UserLoggedInEvent",
             sub=claims.get("sub"),
+            username=claims.get("preferred_username"),
+            email=claims.get("email"),
             tenant_id=claims.get("tenant_id"),
             roles=claims.get("resource_access").get(
                 self.tenant.client_id

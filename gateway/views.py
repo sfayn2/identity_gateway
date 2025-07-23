@@ -104,6 +104,7 @@ def me(request):
 @csrf_exempt
 def refresh_token(request):
     tenant_id = request.POST.get("tenant_id")
+    #tenant_id = request.GET.get("state")
     if not tenant_id:
         return JsonResponse({"error": "Missing tenant id."}, status=400)
 
@@ -116,7 +117,7 @@ def refresh_token(request):
     except TenantConfig.DoesNotExist:
         return JsonResponse({"error": "Unknown tenant"}, status=400)
 
-    adapter =  revolve_idp_adapter(tenant)
+    adapter =  resolve_idp_adapter(tenant)
 
     token_data = adapter.refresh_token(token=refresh_token)
     new_access_token = token_data.get("access_token")
@@ -126,11 +127,14 @@ def refresh_token(request):
         return JsonResponse({"error": "No access/refresh token in response"}, status=40)
 
     claims = adapter.decode_token(new_access_token)
+    print(claims)
     normalized = adapter.normalize_claims(claims)
 
     response = JsonResponse({
         "access_token": new_access_token,
-        "sub": normalized.get("sub")
+        "sub": normalized.sub,
+        "username": normalized.username,
+        "email": normalized.email
     })
 
     # Decision: frontend to request via refresh_token & let frontend have the access token in mem or localStorage via post-login?
