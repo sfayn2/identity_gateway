@@ -15,10 +15,13 @@ class BaseOIDCAdapter(ABC):
     def __init__(self, tenant):
         self.tenant = tenant
 
+    def get_authorization_url(self) -> str:
+        raise NotImplementedError("Subclasses must implement this method")
+
     def decode_token(self, token: str) -> None:
-        metadata = fetch_oidc_metadata(self.tenant.idp_metadata_url)
-        jwks_uri = metadata["jwks_uri"]
-        jwk_client = PyJWKClient(jwks_uri)
+        #metadata = fetch_oidc_metadata(self.tenant.idp_metadata_url)
+        #jwks_uri = metadata["jwks_uri"]
+        jwk_client = PyJWKClient(self.tenant.idp_jwks_uri)
         signing_key = jwk_client.get_signing_key_from_jwt(token)
 
         decoded = jwt.decode(

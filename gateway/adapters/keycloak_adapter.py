@@ -8,20 +8,23 @@ from .dtos import NormalizedClaims
 
 
 class KeycloakIdPAdapter(BaseOIDCAdapter):
+
+    def get_authorization_url(self) -> str:
+        return f"{self.tenant.idp_authorization_url}?client_id={self.tenant.client_id}&redirect_uri={self.tenant.redirect_uri}&response_type=code&scope=openid email profile&state={self.tenant.tenant_id}"
     
     def normalize_claims(self, claims: dict) -> dict:
         return NormalizedClaims(
             event_type="identity_gateway_service.events.UserLoggedInEvent",
             sub=claims.get("sub"),
             tenant_id=claims.get("tenant_id"),
-            roles=claims.get("resource_access").get("ecommerce_app").get("roles")
+            roles=claims.get("resource_access").get(
+                self.tenant.client_id
+            ).get("roles")
         )
 
     def exchange_code_for_token(self, code: str) -> dict:
-        metadata = fetch_oidc_metadata(self.tenant.idp_metadata_url)
-        token_endpoint = metadata["token_endpoint"]
         response = requests.post(
-            token_endpoint,
+            self.tenant.idp_token_endpoint_url,
             data={
                 "grant_type": "authorization_code",
                 "code": code,
@@ -35,10 +38,8 @@ class KeycloakIdPAdapter(BaseOIDCAdapter):
         return response.json()
 
     def refresh_token(self, token: str) -> dict:
-        metadata = fetch_oidc_metadata(self.tenant.idp_metadata_url)
-        token_endpoint = metadata["token_endpoint"]
         response = requests.post(
-            token_endpoint,
+            self.tenant.idp_token_endpoint_url,
             data={
                 "grant_type": "refresh_token",
                 "refresh_token": token,

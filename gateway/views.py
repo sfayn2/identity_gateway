@@ -8,7 +8,43 @@ from .models import TenantConfig
 #from .services.event_publisher import publish_user_logged_in_event
 
 # Create your views here.
-#@csrf_exempt
+def login(request):
+    tenant_id = request.GET.get("state")
+    if not tenant_id:
+        return JsonResponse({"error": "Missing tenant id."}, status=400)
+
+    try:
+        tenant = TenantConfig.objects.get(tenant_id=tenant_id, enabled=True)
+    except TenantConfig.DoesNotExist:
+        return JsonResponse({"error": "Unknown tenant"}, status=400)
+
+    adapter = resolve_idp_adapter(tenant)
+    login_url = adapter.get_authorization_url()
+
+    return redirect(login_url)
+
+def logout(request):
+    tenant_id = request.GET.get("state")
+    if not tenant_id:
+        return JsonResponse({"error": "Missing tenant id."}, status=400)
+
+    try:
+        tenant = TenantConfig.objects.get(tenant_id=tenant_id, enabled=True)
+    except TenantConfig.DoesNotExist:
+        return JsonResponse({"error": "Unknown tenant"}, status=400)
+    
+    response = redirect(tenant.frontend_post_logout_url or "/")
+
+    response.delete_cookie(
+        key=f"refresh_token_{tenant_id}",
+        domain=settings.COOKIES_DOMAIN,
+        path=settings.COOKIES_PATH,
+        samesite=None
+    )
+
+    return response
+
+
 def login_callback(request):
     tenant_id = request.GET.get("state")
     if not tenant_id:
@@ -33,6 +69,9 @@ def login_callback(request):
         return JsonResponse({"error": "Missing Access Token"}, status=400)
 
     claims = adapter.decode_token(access_token)
+    if claims.get("tenant_id") != tenant_id:
+        return JsonResponse({"error": "Invalid tenant id."}, status=400)
+
     normalized = adapter.normalize_claims(claims)
 
     #publish_user_logged_in_event(normalized)
@@ -45,9 +84,8 @@ def login_callback(request):
 
     return response
 
-#@csrf_exempt
 def me(request):
-    tenant_id = request.POST.get("tenant_id")
+    tenant_id = request.GET.get("tenant_id")
     access_token = request.headers.get("Authorization", "").replace("Bearer ", "")
     if not access_token:
         return JsonResponse({"error": "Missing token"}, status=400)
@@ -63,7 +101,7 @@ def me(request):
 
     return JsonResponse(normalized)
 
-#@csrf_exempt
+@csrf_exempt
 def refresh_token(request):
     tenant_id = request.POST.get("tenant_id")
     if not tenant_id:

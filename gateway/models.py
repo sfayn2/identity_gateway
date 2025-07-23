@@ -9,7 +9,17 @@ class TenantConfig(models.Model):
     issuer = models.CharField(max_length=100)
     audience = models.CharField(max_length=100)
     redirect_uri = models.URLField()
-    idp_metadata_url = models.URLField(null=True, blank=True) #optional for discovery
+
+    #idp_metadata_url = models.URLField(null=True, blank=True) #optional for discovery
+    idp_token_endpoint_url = models.URLField(null=True, blank=True) 
+    idp_jwks_uri = models.URLField(null=True, blank=True) 
+    idp_authorization_url = models.URLField(null=True, blank=True) 
+    idp_logout_url = models.URLField(null=True, blank=True) 
 
     frontend_post_login_url = models.URLField()
+    frontend_post_logout_url = models.URLField()
+
     enabled = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.tenant_id} | {self.idp_provider} ({self.client_id}) | {self.frontend_post_login_url}"

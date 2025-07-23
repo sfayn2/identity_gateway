@@ -129,24 +129,17 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-#ACTIVE_IDP = "keycloak"
-#
-#IDP_TOKEN_URL = "https/localhost:8080/realms/ecommerce_realm/protocol/openid-connect/token"
-#IDP_CLIENT_ID = os.getenv("KC_CLIENT_ID")
-#IDP_SECRET = os.getenv("KC_SECRET")
-#IDP_REDIRECT_URI = "http://xyz.com"
-#
-#IDP_CERTS = "http://localhost:8080/realms/ecommerce_realm/protocol/openid-connect/certs"
-#IDP_ISS = "https://localhost:8080/realms/myrealm"
-#IDP_AUD = "keycloack-client-iad" #same w client id?
 
-COOKIES_DOMAIN = "idpgateway.app1.com"
-COOKIES_PATH = "/gateway/refresh"
+#COOKIES_DOMAIN = "idpgateway.app1.com"
+#COOKIES_PATH = "/gateway/refresh"
+
+COOKIES_DOMAIN = "localhost"
+COOKIES_PATH = "/"
 
 #CORS
 CORS_ALLOWED_ORIGINS = [
     "https://ui.app2.com",
-    "http://localhost:8081",
+    "http://localhost:8080",
 ]
 
 CORS_ALLOW_METHODS = [
