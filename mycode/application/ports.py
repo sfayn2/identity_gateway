@@ -29,15 +29,15 @@ class IdPAbstract(ABC):
 
 
     @abstractmethod
-    def normalize_claims(self, claims: dict):
+    def normalize_claims(self, claims: dict) -> dtos.Claims:
         raise NotImplementedError("Subclasses must implement this method")
 
     @abstractmethod
-    def exchange_code_for_token(self,  code: str):
+    def exchange_code_for_token(self,  code: str) -> dtos.TokenSet:
         raise NotImplementedError("Subclasses must implement this method")
 
     @abstractmethod
-    def refresh_token(token: str) -> None:
+    def refresh_token(token: str) -> dtos.TokenSet:
         raise NotImplementedError("Subclasses must implement this method")
 
         
