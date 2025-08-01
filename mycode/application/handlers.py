@@ -1,5 +1,5 @@
 from typing import Tuple
-from mycode.domain import models
+from mycode.domain import models, exceptions
 from mycode.infrastructure import adapters
 from mycode.infrastructure import repositories
 
@@ -40,7 +40,7 @@ def handle_login_callback(
     claims = idp.decode_token(token_data.access_token)
 
     if claims.tenant_id != cmd.tenant_id:
-        raise Exception("Invalid tenant in token")
+        raise exceptions.LoginCallbackException("Invalid tenant in token")
 
     #normalized = idp.normalize_claims(claims)
 
@@ -72,12 +72,12 @@ def handle_refresh_token(
     token_data = idp.refresh_token(cmd.refresh_token)
 
     if not token_data.access_token or not token_data.refresh_token:
-        raise Exception("Missing token data")
+        raise exceptions.RefreshTokenException("Misisng token data")
 
     claims = idp.decode_token(token_data.access_token)
 
     if claims.tenant_id != cmd.tenant_id:
-        raise Exception("Invalid tenant in token")
+        raise exceptions.RefreshTokenException("Invalid tenant in token")
 
     normalized = idp.normalize_claims(claims)
 
