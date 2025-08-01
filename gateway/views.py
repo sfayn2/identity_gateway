@@ -16,57 +16,56 @@ def login_view(request):
     try:
         tenant_id = request.GET.get("state")
         result = handlers.handle_login(
-            cmd=commads.LoginCommand(tenant_id=tenant_id),
+            cmd=commands.LoginCommand(tenant_id=tenant_id),
             tenant_repo=repositories.DjangoTenantRepository(),
             idp_service=idp_services
         )
+        return redirect(result.login_url)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
-
-
-    return redirect(result.login_url)
 
 def logout_view(request):
     try:
         tenant_id = request.GET.get("state")
         result = handlers.handle_logout(
-            cmd=commads.LogoutCommand(tenant_id=tenant_id),
+            cmd=commands.LogoutCommand(tenant_id=tenant_id),
             tenant_repo=repositories.DjangoTenantRepository(),
             idp_service=idp_services
         )
+
+        response = redirect(result.frontend_post_logout_url)
+
+        response.delete_cookie(
+            key=result.cookie_name,
+            domain=settings.COOKIES_DOMAIN,
+            path=settings.COOKIES_PATH,
+            samesite=None
+        )
+
+        return response
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
     
-    response = redirect(result.frontend_post_logout_url)
-
-    response.delete_cookie(
-        key=result.cookie_name,
-        domain=settings.COOKIES_DOMAIN,
-        path=settings.COOKIES_PATH,
-        samesite=None
-    )
-
-    return response
 
 def login_callback_view(request):
     try:
         tenant_id = request.GET.get("state")
         code = request.GET.get("code")
-        result = handlers.handle_logout(
+        result = handlers.handle_login_callback(
             cmd=commands.LogoutCommand(tenant_id=tenant_id, code=code),
             tenant_repo=repositories.DjangoTenantRepository(),
             idp_service=idp_services
         )
+        response = redirect(result.frontend_post_login_url)
+        response.set_cookie(
+            key=result.cookie_name, value=result.refresh_token, httponly=True, 
+            samesite=None, domain=settings.COOKIES_DOMAIN, path=settings.COOKIES_PATH, secure=True
+        )
+
+        return response
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
 
-    response = redirect(result.frontend_post_login_url)
-    response.set_cookie(
-        key=result.cookie_name, value=result.refresh_token, httponly=True, 
-        samesite=None, domain=settings.COOKIES_DOMAIN, path=settings.COOKIES_PATH, secure=True
-    )
-
-    return response
 
 def me_view(request):
     try:
@@ -77,13 +76,13 @@ def me_view(request):
             tenant_repo=repositories.DjangoTenantRepository(),
             idp_service=idp_services
         )
+        return JsonResponse(result)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
 
-    return JsonResponse(normalized)
 
 @csrf_exempt
-def refresh_token(request):
+def refresh_token_view(request):
     try:
         tenant_id = request.POST.get("tenant_id")
         refresh_token = request.COOKIES.get(f"refresh_token_{tenant_id}")
@@ -92,22 +91,23 @@ def refresh_token(request):
             tenant_repo=repositories.DjangoTenantRepository(),
             idp_service=idp_services
         )
+
+        response = JsonResponse({
+            "access_token":result.access_token,
+            "sub": result.sub,
+            "name":result.name,
+            "email":result.email
+        })
+
+        # Decision: frontend to request via refresh_token & let frontend have the access token in mem or localStorage via post-login?
+
+        response.set_cookie(
+            key=result.cookie_name, value=result.refresh_token, httponly=True, 
+            samesite=None, domain=settings.COOKIES_DOMAIN, path=settings.COOKIES_PATH, secure=True
+        )
+
+        return response
+
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
-
-    response = JsonResponse({
-        "access_token":token_data.access_token,
-        "sub": claims.sub,
-        "name":claims.name,
-        "email":claims.email
-    })
-
-    # Decision: frontend to request via refresh_token & let frontend have the access token in mem or localStorage via post-login?
-
-    response.set_cookie(
-        key=result.cookie_name, value=result.refresh_token, httponly=True, 
-        samesite=None, domain=settings.COOKIES_DOMAIN, path=settings.COOKIES_PATH, secure=True
-    )
-
-    return response
 
