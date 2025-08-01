@@ -52,7 +52,7 @@ def login_callback_view(request):
         tenant_id = request.GET.get("state")
         code = request.GET.get("code")
         result = handlers.handle_login_callback(
-            cmd=commands.LogoutCommand(tenant_id=tenant_id, code=code),
+            cmd=commands.LoginCallbackCommand(tenant_id=tenant_id, code=code),
             tenant_repo=repositories.DjangoTenantRepository(),
             idp_service=idp_services
         )
@@ -76,7 +76,7 @@ def me_view(request):
             tenant_repo=repositories.DjangoTenantRepository(),
             idp_service=idp_services
         )
-        return JsonResponse(result)
+        return JsonResponse(result.__dict__)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
 
