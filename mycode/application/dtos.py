@@ -35,14 +35,14 @@ class TokenSet(BaseModel):
 class LoginCallbackResponse(BaseModel):
     cookie_name: str
     refresh_token: str
-    front_end_post_login_url: str
+    frontend_post_login_url: str
 
 class LoginResponse(BaseModel):
     authorization_url: str
 
 class LogoutResponse(BaseModel):
     cookie_name: str
-    front_end_post_logout_url: str
+    frontend_post_logout_url: str
 
 class RefreshTokenResponse(BaseModel):
     cookie_name: str
