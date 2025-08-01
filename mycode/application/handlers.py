@@ -24,7 +24,7 @@ def handle_logout(
     tenant = tenant_repo.get_tenant(cmd.tenant_id)
     idp = idp_service.resolve_idp(tenant)
     return dtos.LogoutResponse(
-        cookie_name=f"refresh_token_{cmd.tenant_id}"
+        cookie_name=f"refresh_token_{cmd.tenant_id}",
         frontend_post_logout_url=idp.frontend_post_logout_url or  "/"
     )
 
@@ -46,7 +46,7 @@ def handle_login_callback(
 
     #return normalized, token_data, tenant.frontend_post_login_url
     return dtos.LoginCallbackResponse(
-        cookie_name=f"refresh_token_{cmd.tenant_id}"
+        cookie_name=f"refresh_token_{cmd.tenant_id}",
         refresh_token=token_data.refresh_token, 
         frontend_post_login_url=tenant.frontend_post_login_url
     )
@@ -56,9 +56,9 @@ def handle_me(
     tenant_repo: repositories.TenantRepository,
     idp_service: adapters.IdPAdapter
 ) -> dtos.Claims:
-    tenant = tenant_repo.get_tenant(cmd.tenant_id)
+    tenant = tenant_repo.get_tenant(qry.tenant_id)
     idp = idp_service.resolve_idp(tenant)
-    claims = idp.decode_token(token_data.access_token)
+    claims = idp.decode_token(qry.access_token)
 
     return idp.normalize_claims(claims)
 
@@ -69,7 +69,7 @@ def handle_refresh_token(
 ) -> dtos.RefreshTokenResponse:
     tenant = tenant_repo.get_tenant(cmd.tenant_id)
     idp = idp_service.resolve_idp(tenant)
-    token_data = idp.exchange_code_for_token(cmd.code)
+    token_data = idp.refresh_token(cmd.refresh_token)
 
     if not token_data.access_token or not token_data.refresh_token:
         raise Exception("Missing token data")
