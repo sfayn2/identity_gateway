@@ -42,3 +42,7 @@ class IdPPort(ABC):
         raise NotImplementedError("Subclasses must implement this method")
 
         
+class EventBus(ABC):
+    @abstractmethod
+    def publish(self, event: events.DomainEvent) -> None:
+        raise NotImplementedError("Subclasses must implement this method")

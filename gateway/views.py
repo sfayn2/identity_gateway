@@ -1,4 +1,4 @@
-import jwt, json
+import jwt, json, redis
 from django.conf import settings
 from django.shortcuts import render, redirect
 from django.http import JsonResponse, HttpResponseRedirect
@@ -49,10 +49,12 @@ def login_callback_view(request):
     try:
         tenant_id = request.GET.get("state")
         code = request.GET.get("code")
+        redis_client = redis.Redis.from_url(settings.REDIS_URL)
         result = handlers.handle_login_callback(
             cmd=commands.LoginCallbackCommand(tenant_id=tenant_id, code=code),
             tenant_repo=repositories.DjangoTenantRepository(),
-            idp_service=idp_services
+            idp_service=idp_services,
+            event_bus=event_bus.RedisEventBus(redis_client)
         )
         response = redirect(result.frontend_post_login_url)
         response.set_cookie(

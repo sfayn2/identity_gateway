@@ -1,7 +1,6 @@
 from __future__ import annotations
 from typing import Tuple
-from mycode.domain import models, exceptions
-
+from mycode.domain import models, exceptions, events
 from mycode.application import commands, queries, dtos
 
 def handle_login(
@@ -34,11 +33,17 @@ def handle_logout(
 def handle_login_callback(
      cmd: commands.LoginCallbackCommand, 
      tenant_repo: repositories.TenantRepository,
-     idp_service: ports.IdPPort
+     idp_service: ports.IdPPort,
+     event_bus: EventBus
 ) -> dtos.LoginCallbackResponse:
     tenant = tenant_repo.get_tenant(cmd.tenant_id)
     idp = idp_service.resolve_idp(tenant)
     token_data = tenant.login_callback(cmd.code, idp)
+
+    #TODO simplify?
+    for event in tenant._events:
+        event_bus.publish(event)
+    tenant.events.clear()
 
     return dtos.LoginCallbackResponse(
         cookie_name=f"refresh_token_{cmd.tenant_id}",
