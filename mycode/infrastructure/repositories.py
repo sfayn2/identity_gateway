@@ -5,8 +5,8 @@ from gateway import models as django_models
 class DjangoTenantRepository(repositories.TenantRepositoryAbstract):
     def get_tenant(self, tenant_id: str) -> models.Tenant:
         config = TenantConfig.objects.get(tenant_id=tenant_id, enabled=True)
-        return Tenant(
-            tenant_id=config.tenant_id
+        return models.Tenant(
+            tenant_id=config.tenant_id,
             idp_provider=config.idp_provider,
             client_id=config.client_id,
             client_secret=config.client_secret,

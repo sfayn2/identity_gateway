@@ -1,3 +1,4 @@
+from __future__ import annotations
 import jwt
 from typing import Union
 from django.conf import settings

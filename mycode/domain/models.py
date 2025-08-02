@@ -1,4 +1,5 @@
-from typing import Optional, Tuple
+from __future__ import annotations
+from typing import Optional, Tuple, List
 from dataclasses import dataclass, field
 from mycode.domain import exceptions
 
@@ -20,7 +21,7 @@ class Tenant:
     frontend_post_login_url: str
     frontend_post_logout_url: Optional[str] = "/"
 
-    enabled: bool
+    enabled: bool = False
     allowed_email_domains: Optional[List[str]] = field(default_factory=list)
 
     @property
@@ -34,7 +35,7 @@ class Tenant:
         secret = self._client_secret
         if not secret:
             return "[None]"
-            return f"{secret[:4]}...{secret[-4:]}"
+        return f"{secret[:4]}...{secret[-4:]}"
 
     def authorize(self, idp: IdPPort) -> str:
         self._ensure_active()
@@ -52,6 +53,14 @@ class Tenant:
         self._validate_claims(claims)
 
         return token_data
+
+    def me(self, access_token: str, idp: IdPPort) -> Claims:
+        self._ensure_active()
+        claims = idp.decode_token(access_token)
+        self._validate_claims(claims)
+
+        return idp.normalize_claims(claims)
+
 
     def refresh(self, refresh_token: str, idp: IdPPort) -> Tuple[TokenSet, Claims]:
         self._ensure_active()

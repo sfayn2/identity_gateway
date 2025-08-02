@@ -1,14 +1,13 @@
+from __future__ import annotations
 from typing import Tuple
 from mycode.domain import models, exceptions
-from mycode.infrastructure import adapters
-from mycode.infrastructure import repositories
 
 from mycode.application import commands, queries, dtos
 
 def handle_login(
      cmd: commands.LoginCommand, 
      tenant_repo: repositories.TenantRepository,
-     idp_service: adapters.IdPAdapter
+     idp_service: ports.IdPPort
 ) -> dtos.LoginResponse:
     tenant = tenant_repo.get_tenant(cmd.tenant_id)
     idp = idp_service.resolve_idp(tenant)
@@ -21,7 +20,7 @@ def handle_login(
 def handle_logout(
      cmd: commands.LogoutCommand, 
      tenant_repo: repositories.TenantRepository,
-     idp_service: adapters.IdPAdapter
+     idp_service: ports.IdPPort
 ) -> dtos.LogoutResponse:
     tenant = tenant_repo.get_tenant(cmd.tenant_id)
     logout_url = tenant.logout_url()
@@ -35,7 +34,7 @@ def handle_logout(
 def handle_login_callback(
      cmd: commands.LoginCallbackCommand, 
      tenant_repo: repositories.TenantRepository,
-     idp_service: adapters.IdPAdapter
+     idp_service: ports.IdPPort
 ) -> dtos.LoginCallbackResponse:
     tenant = tenant_repo.get_tenant(cmd.tenant_id)
     idp = idp_service.resolve_idp(tenant)
@@ -50,34 +49,22 @@ def handle_login_callback(
 def handle_me(
     qry: queries.MeQuery,
     tenant_repo: repositories.TenantRepository,
-    idp_service: adapters.IdPAdapter
+    idp_service: ports.IdPPort
 ) -> dtos.Claims:
     tenant = tenant_repo.get_tenant(qry.tenant_id)
     idp = idp_service.resolve_idp(tenant)
-    claims = idp.decode_token(qry.access_token)
+    claims = tenant.me(qry.access_token)
 
-    return idp.normalize_claims(claims)
+    return claims
 
 def handle_refresh_token(
     cmd: commands.RefreshTokenCommand, 
     tenant_repo: repositories.TenantRepository,
-    idp_service: adapters.IdPAdapter
+    idp_service: ports.IdPPort
 ) -> dtos.RefreshTokenResponse:
     tenant = tenant_repo.get_tenant(cmd.tenant_id)
     idp = idp_service.resolve_idp(tenant)
     normalized, token_data = tenant.refresh(cmd.refresh_token, idp)
-
-    #token_data = idp.refresh_token(cmd.refresh_token)
-
-    #if not token_data.access_token or not token_data.refresh_token:
-    #    raise exceptions.RefreshTokenException("Missing token data")
-
-    #claims = idp.decode_token(token_data.access_token)
-
-    #if claims.tenant_id != cmd.tenant_id:
-    #    raise exceptions.RefreshTokenException("Invalid tenant in token")
-
-    #normalized = idp.normalize_claims(claims)
 
     return dtos.RefreshTokenResponse(
         cookie_name=f"refresh_token_{cmd.tenant_id}",

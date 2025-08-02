@@ -1,2 +1,2 @@
 
-from .resolver import resolve_idp_adapter
+from .resolver import resolve_idp

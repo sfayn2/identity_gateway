@@ -1,4 +1,5 @@
 import jwt
+from mycode.application import ports, dtos
 
 class Auth0IdPAdapter(ports.IdPPort):
 
