@@ -7,7 +7,7 @@ from mycode.application import ports, dtos
 
 
 
-class KeycloakIdPAdapter(ports.IdPAdapter):
+class KeycloakIdPAdapter(ports.IdPPort):
 
     def get_authorization_url(self) -> str:
         return f"{self.tenant.idp_authorization_url}?client_id={self.tenant.client_id}&redirect_uri={self.tenant.redirect_uri}&response_type=code&scope=openid email profile&state={self.tenant.tenant_id}"

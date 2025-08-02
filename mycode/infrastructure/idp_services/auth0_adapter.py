@@ -1,7 +1,6 @@
 import jwt
-from .base import BaseOIDCAdapter
 
-class Auth0IdPAdapter(BaseOIDCAdapter):
+class Auth0IdPAdapter(ports.IdPPort):
 
     def decode_token(self, token: str) -> str:
         return jwt.decode(token, options={"verify_signature": False, algorithms:["RS256"]})

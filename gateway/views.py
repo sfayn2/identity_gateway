@@ -3,8 +3,6 @@ from django.conf import settings
 from django.shortcuts import render, redirect
 from django.http import JsonResponse, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
-from .adapters.resolver import  resolve_idp_adapter
-from .models import TenantConfig
 #from .services.event_publisher import publish_user_logged_in_event
 
 from mycode.infrastructure import repositories, idp_services

@@ -5,3 +5,6 @@ class LoginCallbackException(Exception):
 
 class RefreshTokenException(Exception):
     pass
+
+class TenantException(Exception):
+    pass

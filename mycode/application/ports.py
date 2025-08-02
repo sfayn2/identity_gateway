@@ -4,7 +4,7 @@ import jwt
 from jwt import PyJWKClient
 
 
-class IdPAbstract(ABC):
+class IdPPort(ABC):
 
     def __init__(self, tenant):
         self.tenant = tenant

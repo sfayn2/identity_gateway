@@ -19,6 +19,7 @@ class TenantConfig(models.Model):
     frontend_post_login_url = models.URLField()
     frontend_post_logout_url = models.URLField()
 
+    allowed_email_domains = models.CharField(max_length=255, null=True, blank=True)
     enabled = models.BooleanField(default=True)
 
     def __str__(self):

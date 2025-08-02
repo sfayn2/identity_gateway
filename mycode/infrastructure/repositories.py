@@ -1,3 +1,4 @@
+import json
 from mycode.domain import models, repositories
 from gateway import models as django_models
 
@@ -18,5 +19,6 @@ class DjangoTenantRepository(repositories.TenantRepositoryAbstract):
             idp_logout_url=config.idp_logout_url,
             frontend_post_login_url=config.frontend_post_login_url,
             frontend_post_logout_url=config.frontend_post_logout_url,
-            enabled=config.enabled
+            enabled=config.enabled,
+            allowed_email_domains=json.loads(config.allowed_email_domains)
         )

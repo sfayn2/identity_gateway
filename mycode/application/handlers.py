@@ -12,8 +12,10 @@ def handle_login(
 ) -> dtos.LoginResponse:
     tenant = tenant_repo.get_tenant(cmd.tenant_id)
     idp = idp_service.resolve_idp(tenant)
+    authorization_url = tenant.authorize(idp)
+
     return dtos.LoginResponse(
-        authorization_url=idp.get_authorization_url()
+        authorization_url=authorization_url
     )
 
 def handle_logout(
@@ -22,10 +24,11 @@ def handle_logout(
      idp_service: adapters.IdPAdapter
 ) -> dtos.LogoutResponse:
     tenant = tenant_repo.get_tenant(cmd.tenant_id)
-    idp = idp_service.resolve_idp(tenant)
+    logout_url = tenant.logout_url()
+    #idp = idp_service.resolve_idp(tenant)
     return dtos.LogoutResponse(
         cookie_name=f"refresh_token_{cmd.tenant_id}",
-        frontend_post_logout_url=idp.frontend_post_logout_url or  "/"
+        frontend_post_logout_url=logout_url
     )
 
 
@@ -36,15 +39,8 @@ def handle_login_callback(
 ) -> dtos.LoginCallbackResponse:
     tenant = tenant_repo.get_tenant(cmd.tenant_id)
     idp = idp_service.resolve_idp(tenant)
-    token_data = idp.exchange_code_for_token(cmd.code)
-    claims = idp.decode_token(token_data.access_token)
+    token_data = tenant.login_callback(cmd.code, idp)
 
-    if claims.tenant_id != cmd.tenant_id:
-        raise exceptions.LoginCallbackException("Invalid tenant in token")
-
-    #normalized = idp.normalize_claims(claims)
-
-    #return normalized, token_data, tenant.frontend_post_login_url
     return dtos.LoginCallbackResponse(
         cookie_name=f"refresh_token_{cmd.tenant_id}",
         refresh_token=token_data.refresh_token, 
@@ -69,25 +65,27 @@ def handle_refresh_token(
 ) -> dtos.RefreshTokenResponse:
     tenant = tenant_repo.get_tenant(cmd.tenant_id)
     idp = idp_service.resolve_idp(tenant)
-    token_data = idp.refresh_token(cmd.refresh_token)
+    normalized, token_data = tenant.refresh(cmd.refresh_token, idp)
 
-    if not token_data.access_token or not token_data.refresh_token:
-        raise exceptions.RefreshTokenException("Misisng token data")
+    #token_data = idp.refresh_token(cmd.refresh_token)
 
-    claims = idp.decode_token(token_data.access_token)
+    #if not token_data.access_token or not token_data.refresh_token:
+    #    raise exceptions.RefreshTokenException("Missing token data")
 
-    if claims.tenant_id != cmd.tenant_id:
-        raise exceptions.RefreshTokenException("Invalid tenant in token")
+    #claims = idp.decode_token(token_data.access_token)
 
-    normalized = idp.normalize_claims(claims)
+    #if claims.tenant_id != cmd.tenant_id:
+    #    raise exceptions.RefreshTokenException("Invalid tenant in token")
+
+    #normalized = idp.normalize_claims(claims)
 
     return dtos.RefreshTokenResponse(
         cookie_name=f"refresh_token_{cmd.tenant_id}",
         refresh_token=token_data.refresh_token,
         access_token=token_data.access_token,
-        sub=claims.sub,
-        name=claims.name,
-        email=claims.email
+        sub=normalized.sub,
+        name=normalized.name,
+        email=normalized.email
     )
 
 
