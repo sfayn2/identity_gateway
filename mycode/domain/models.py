@@ -24,14 +24,14 @@ class Tenant:
     enabled: bool = False
     allowed_email_domains: Optional[List[str]] = field(default_factory=list)
 
-    _events: List[events.DomainEvent] = field(default_factory=list, init=False)
+    events: List[events.DomainEvent] = field(default_factory=list, init=False)
 
     @property
     def client_secret(self):
         raise exceptions.TenantException("Direct access to client secret is not allowed, Use secure accessors.")
     
     def raise_event(self, event: events.DomainEvent):
-        self._events.append(event)
+        self.events.append(event)
 
     def get_client_secret(self) -> str:
         return self._client_secret
@@ -58,7 +58,7 @@ class Tenant:
         self._validate_claims(claims)
 
         event = events.UserLoggedInEvent(
-            tenant_id=tenant.tenant_id,
+            tenant_id=self.tenant_id,
             sub=claims.sub,
             email=claims.email,
             name=claims.name
