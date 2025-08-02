@@ -29,6 +29,12 @@ def handle_logout(
         frontend_post_logout_url=logout_url
     )
 
+def _dispatch_events(tenant_agg: models.Tenant, event_bus: EventBus):
+    #TODO simplify?
+    for event in tenant_agg._events:
+        event_bus.publish(event)
+    tenant_agg.events.clear()
+
 
 def handle_login_callback(
      cmd: commands.LoginCallbackCommand, 
@@ -40,10 +46,8 @@ def handle_login_callback(
     idp = idp_service.resolve_idp(tenant)
     token_data = tenant.login_callback(cmd.code, idp)
 
-    #TODO simplify?
-    for event in tenant._events:
-        event_bus.publish(event)
-    tenant.events.clear()
+    _dispatch_events(tenant_agg=tenant, event_bus=event_bus)
+
 
     return dtos.LoginCallbackResponse(
         cookie_name=f"refresh_token_{cmd.tenant_id}",
